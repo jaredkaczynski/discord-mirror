@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const { DISCORD_TOKEN: discordToken, SERVER_ID: serverId } = process.env;
+const { DISCORD_TOKEN: discordToken, SERVER_ID: serverId , REDIS_URI: redisUri} = process.env;
 
 const headers = {
   'Content-Type': 'application/json',
@@ -12,5 +12,6 @@ const headers = {
 export {
   discordToken,
   serverId,
+  redisUri,
   headers,
 };
