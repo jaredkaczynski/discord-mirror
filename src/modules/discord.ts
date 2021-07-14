@@ -1,4 +1,5 @@
 import Websocket from 'ws';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 import jsonfile from 'jsonfile';
 import fetch, {Response} from 'node-fetch';
 import {
@@ -10,6 +11,12 @@ import RESTConsumer from "@synzen/discord-rest/dist/RESTConsumer";
 
 const producer = new RESTProducer(redisUri!);
 const consumer = new RESTConsumer(redisUri!, '${discordToken}');
+
+const options = {
+    WebSocket: Websocket, // custom WebSocket constructor
+    connectionTimeout: 1000,
+    maxRetries: 10,
+};
 
 export const createWebhook = async (channelId: string): Promise<string> => fetch(`https://discord.com/api/v8/channels/${channelId}/webhooks`, {
     method: 'POST',
@@ -48,14 +55,18 @@ export const createChannel = async (name: string, pos: number, newId: string, pa
 
 export const listen = async (): Promise<void> => {
     const serverMap = jsonfile.readFileSync('./map.json');
-    const socket = new Websocket('wss://gateway.discord.gg/?v=6&encoding=json');
+    const socket = new ReconnectingWebSocket('wss://gateway.discord.gg/?v=6&encoding=json', [], options);
     let authenticated = false;
 
-    socket.on('open', () => {
+    socket.addEventListener('open', () => {
+        authenticated = false;
         console.log('Connected to Discord API');
     });
-    socket.on('message', async (data: Websocket.Data) => {
-        const message = JSON.parse(data.toString());
+    socket.addEventListener('close', () => {
+        console.log('Disconnected from Discord API');
+    });
+    socket.addEventListener('message', (data: any) => {
+        const message = JSON.parse(data.data.toString());
 
         switch (message.op) {
             case 10:
@@ -93,12 +104,6 @@ export const listen = async (): Promise<void> => {
                     let {
                         avatar, username, id, discriminator,
                     } = message.d.author;
-                    if (id === undefined) {
-                        id = "864553606191906846"
-                    }
-                    if (avatar === undefined) {
-                        avatar = "Tdin5DCQ56uwV45yiyMMU8p6s0ipbXDa2dq4X_4liIvbUcj5xKUCKwNZtzJ_mSTXZR7E"
-                    }
                     const avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
                     const webhookUrl = serverMap[channelId];
                     const hookContent: WebhookConfig = {
