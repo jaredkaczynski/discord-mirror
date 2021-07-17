@@ -220,7 +220,11 @@ export const createServer = async (channels: Channel[]): Promise<void> => {
 
 export const updateServer = async (channels: Channel[]): Promise<void> => {
     console.log('Updating mirror server...');
-    const serverMap = jsonfile.readFileSync('./map.json');
+    const serverMapTemp = jsonfile.readFileSync('./map.json');
+    let serverMap = new Map();
+    for (var value in serverMapTemp) {
+        serverMap.set(value, serverMapTemp[value])
+    }
     const cleanedChannels = channels.map(({
                                               id, parent_id, guild_id, last_message_id, ...rest
                                           }) => rest);
