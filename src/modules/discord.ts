@@ -228,18 +228,18 @@ export const updateServer = async (channels: Channel[]): Promise<void> => {
     const cleanedChannels = channels.map(({
                                               id, parent_id, guild_id, last_message_id, ...rest
                                           }) => rest);
-    const categories = cleanedChannels.filter((channel) => channel.type === 4);
-    const body = {
-        name: 'mirror',
-        channels: categories,
-    };
-    const serverResp: Response = await fetch('https://discord.com/api/v8/guilds', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-    });
-    const server: Guild = await serverResp.json();
-    const newId = server.id;
+    // const categories = cleanedChannels.filter((channel) => channel.type === 4);
+    // const body = {
+    //     name: 'mirror',
+    //     channels: categories,
+    // };
+    // const serverResp: Response = await fetch('https://discord.com/api/v8/guilds', {
+    //     method: 'POST',
+    //     headers,
+    //     body: JSON.stringify(body),
+    // });
+
+    const newId = serverMap.get('serverId');
 
     const channelResp = await fetch(`https://discord.com/api/v8/guilds/${newId}/channels`, {
         headers: {
