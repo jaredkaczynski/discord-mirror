@@ -275,6 +275,7 @@ export const updateServer = async (channels: Channel[]): Promise<void> => {
                     }
                 }
             } catch (err) {
+                console.log(err);
             }
         }
         jsonfile.writeFileSync('./map.json', Object.fromEntries(serverMap));
