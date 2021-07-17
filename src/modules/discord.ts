@@ -221,8 +221,8 @@ export const createServer = async (channels: Channel[]): Promise<void> => {
 export const updateServer = async (channels: Channel[]): Promise<void> => {
     console.log('Updating mirror server...');
     const serverMapTemp = jsonfile.readFileSync('./map.json');
-    let serverMap = new Map();
-    for (var value in serverMapTemp) {
+    const serverMap = new Map();
+    for (let value in serverMapTemp) {
         serverMap.set(value, serverMapTemp[value])
     }
     const cleanedChannels = channels.map(({
@@ -261,6 +261,7 @@ export const updateServer = async (channels: Channel[]): Promise<void> => {
                             if (serverMap.has(channel.id)) {
                                 console.log('Channel Already Exists');
                             } else {
+                                console.log('Creating channel ' + channel.name);
                                 const newChannel = await createChannel(
                                     channel.name,
                                     channel.position,
