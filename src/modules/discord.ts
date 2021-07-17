@@ -250,6 +250,8 @@ export const updateServer = async (channels: Channel[]): Promise<void> => {
 
     const serverChannels: Channel[] = await channelResp.json();
 
+    console.log(serverChannels);
+
     return new Promise(async (resolve) => {
         for (const channel of channels) {
             try {
