@@ -63,6 +63,7 @@ export const listen = async (): Promise<void> => {
         console.log('Connected to Discord API');
     });
     socket.addEventListener('close', () => {
+        authenticated = false;
         console.log('Disconnected from Discord API');
     });
     socket.addEventListener('message', (data: any) => {
@@ -88,9 +89,9 @@ export const listen = async (): Promise<void> => {
                         d: {
                             token: discordToken,
                             properties: {
-                                $os: 'linux',
-                                $browser: 'test',
-                                $device: 'test',
+                                $os: 'Windows',
+                                $browser: 'Chrome',
+                                $device: '',
                             },
                         },
                     }));
@@ -206,6 +207,65 @@ export const createServer = async (channels: Channel[]): Promise<void> => {
                             );
                             const newWebhook = await createWebhook(newChannel.id);
                             serverMap.set(channel.id, newWebhook);
+                        }
+                    }
+                }
+            } catch (err) {
+            }
+        }
+        jsonfile.writeFileSync('./map.json', Object.fromEntries(serverMap));
+        resolve();
+    });
+};
+
+export const updateServer = async (channels: Channel[]): Promise<void> => {
+    console.log('Updating mirror server...');
+    const serverMap = jsonfile.readFileSync('./map.json');
+    const cleanedChannels = channels.map(({
+                                              id, parent_id, guild_id, last_message_id, ...rest
+                                          }) => rest);
+    const categories = cleanedChannels.filter((channel) => channel.type === 4);
+    const body = {
+        name: 'mirror',
+        channels: categories,
+    };
+    const serverResp: Response = await fetch('https://discord.com/api/v8/guilds', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+    });
+    const server: Guild = await serverResp.json();
+    const newId = server.id;
+
+    const channelResp = await fetch(`https://discord.com/api/v8/guilds/${newId}/channels`, {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: discordToken!,
+        },
+    });
+
+    const serverChannels: Channel[] = await channelResp.json();
+
+    return new Promise(async (resolve) => {
+        for (const channel of channels) {
+            try {
+                if (channel.parent_id && channel.type !== 2) {
+                    const parentChannel = channels.find((chan) => chan.id === channel.parent_id);
+                    if (parentChannel) {
+                        const newParentChannel = serverChannels.find((chan) => chan.name === parentChannel.name);
+                        if (newParentChannel) {
+                            if (serverMap.has(channel.id)) {
+                                console.log('Channel Already Exists');
+                            } else {
+                                const newChannel = await createChannel(
+                                    channel.name,
+                                    channel.position,
+                                    newId,
+                                    newParentChannel.id,
+                                );
+                                const newWebhook = await createWebhook(newChannel.id);
+                                serverMap.set(channel.id, newWebhook);
+                            }
                         }
                     }
                 }
