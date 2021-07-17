@@ -260,6 +260,7 @@ export const updateServer = async (channels: Channel[]): Promise<void> => {
                     if (parentChannel) {
                         const newParentChannel = serverChannels.find((chan) => chan.name === parentChannel.name);
                         if (newParentChannel) {
+                            console.log(channel);
                             if (serverMap.has(channel.id)) {
                                 console.log('Channel Already Exists');
                             } else {
